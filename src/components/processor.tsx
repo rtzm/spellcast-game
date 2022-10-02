@@ -1,20 +1,22 @@
 import React, { useEffect, useRef, useState } from "react";
-import Converter from './converter';
+import { Vector } from "../types";
+import createConverter, { Converter } from "./converter";
 
 type ProcessorProps = {
   video: HTMLVideoElement | null;
   height: number;
   width: number;
   // TODO: assign correct type
-  onConvert: (value: any) => void;
+  onProcessVector: (value: Vector) => void;
 };
 
-const Processor = ({ video, height, width }: ProcessorProps) => {
+const Processor = ({ video, height, width, onProcessVector }: ProcessorProps) => {
 
   const [context, setContext] = useState<CanvasRenderingContext2D | null>(null);
   const [rafId, setRafId] = useState<number>(-1);
   const [imageData, setImageData] = useState<ImageData | null>(null);
   const [recording, setRecording] = useState<boolean>(false);
+  const [converter, setConverter] = useState<Converter | null>(null);
 
   const offscreenCanvas = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
@@ -33,6 +35,17 @@ const Processor = ({ video, height, width }: ProcessorProps) => {
     window.cancelAnimationFrame(rafId);
   };
 
+  // Create Converter singleton
+  useEffect(() => {
+    setConverter(createConverter());
+  }, [])
+  
+  useEffect(() => {
+    if (imageData) {
+      onProcessVector(converter?.convertFrame(imageData) || { x: 0, y: 0 });
+    }
+  }, [converter, imageData]);
+
   useEffect(() => {
     if (context && video) {
       process(context, video);
@@ -43,6 +56,7 @@ const Processor = ({ video, height, width }: ProcessorProps) => {
       stop();
       setRecording(false);
     }
+    return () => { stop(); }
   }, [context, video]);
 
 
@@ -56,13 +70,6 @@ const Processor = ({ video, height, width }: ProcessorProps) => {
         width={width}
         height={height}
         ref={offscreenCanvas}
-      />
-      <Converter
-        height={height}
-        width={width}
-        imageData={imageData}
-        // TODO: do something with this vector when it works
-        onConvert={(avgVector) => {}}
       />
     </>
   );

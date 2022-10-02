@@ -4,12 +4,14 @@ import Controls from './components/controls';
 import IncomingVideo from './components/incoming-video';
 import Processor from './components/processor';
 import './App.css';
+import { Vector } from './types';
 
 function App() {
   const [errored, setErrored] = useState<boolean>(false);
   const [video, setVideo] = useState<HTMLVideoElement| null>(null);
   const [height, setHeight] = useState<number>(0);
   const [width, setWidth] = useState<number>(0);
+  const [currentVector, setCurrentVector] = useState<Vector>({x: 0, y: 0});
 
   // Create canvases and objects for processing, and attach event listeners
   const videoLoadCallback = (video: HTMLVideoElement | null, downsampledHeight: number, downsampledWidth: number) => {
@@ -43,7 +45,9 @@ function App() {
         <div>Unable to run with your browser/camera.</div>
       ) : (
         <>
-          <GlyphContainer />
+          <GlyphContainer
+            deltaVector={currentVector}
+          />
           <IncomingVideo
               onLoad={videoLoadCallback}
               onError={() => setErrored(true)}
@@ -53,10 +57,8 @@ function App() {
             video={video}
             height={height}
             width={width}
-            onConvert={(value) => console.log(value)} 
+            onProcessVector={vector => setCurrentVector(vector)} 
           />
-          {/* TODO: write values to the screen */}
-          {/* <GlyphWriter /> */}
         </>
       )}
       <div id="instructions">Press the <strong>Start</strong> button to start reading in camera data. Then either click your mouse or (if on touch device) touch within the box above to begin writing. Click again or lift your finger to stop writing and move the reticle. When you're done, click <strong>Stop</strong>, and your writing will attempt to be transcribed below.</div>

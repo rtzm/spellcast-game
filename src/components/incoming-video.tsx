@@ -65,7 +65,6 @@ const IncomingVideo = ({ onError, onLoad }: IncomingVideoProps) => {
   
   }, [])
 
-  useEffect(() => {console.log(downsampleRate)}, [downsampleRate]);
   useEffect(() => {
     if (thisVideo?.current && stream) {
     	stream.getAudioTracks().forEach(track => track.enabled = false);
@@ -81,6 +80,8 @@ const IncomingVideo = ({ onError, onLoad }: IncomingVideoProps) => {
   return (
     <>
       <video
+        disablePictureInPicture={true}
+        style={{ display: "none" }}
         ref={thisVideo}
         playsInline={true}
         muted={true}
