@@ -1,11 +1,13 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { MouseEvent, TouchEvent, useEffect, useRef, useState } from "react";
+import { createWorker, Worker } from 'tesseract.js';
 import { Vector } from "../types";
 
 type GlyphContainerProps = {
   deltaVector: Vector;
+  onCast: (text: string) => void;
 }
 
-const GlyphContainer = ({ deltaVector }: GlyphContainerProps) => {
+const GlyphContainer = ({ deltaVector, onCast }: GlyphContainerProps) => {
   const totalWidth = 480;
   const totalHeight = 320;
   const SENSIVITITY = 2;
@@ -17,6 +19,22 @@ const GlyphContainer = ({ deltaVector }: GlyphContainerProps) => {
   const glyphCanvas = useRef<HTMLCanvasElement>(null);
   const reticleCanvas = useRef<HTMLCanvasElement>(null);
   const [drawing, setDrawing] = useState<boolean>(false);
+  const [tesseractWorker, setTesseractWorker] = useState<Worker | null>()
+
+  useEffect(() => {
+    const worker = createWorker({
+      // TODO: figure out local trained data (not reading from here correctly)
+      // langPath: "./../assets/lang-data",
+      logger: m => console.log(m),
+    });
+    (async () => {
+      await worker.load();
+      await worker.loadLanguage('eng');
+      await worker.initialize('eng');
+    })();
+    setTesseractWorker(worker);
+    return () => { worker?.terminate() };
+  }, []);
 
   /**
    * Get current position and subtract vector
@@ -91,13 +109,27 @@ const GlyphContainer = ({ deltaVector }: GlyphContainerProps) => {
     }
   }, [deltaVector, drawing]);
 
+  const checkCasted = (event: TouchEvent) => {
+    console.log(event);
+  };
+
+  const cast = async (event: MouseEvent | TouchEvent) => {
+    if (!tesseractWorker || !glyphCanvas.current) {
+      return;
+    }
+
+    const { data: { text } } = await tesseractWorker.recognize(glyphCanvas.current);
+    onCast(text);
+  };
   return (
     <div
       id="glyph-container"
       onTouchStart={e => setDrawing(true)}
-      onMouseEnter={e => setDrawing(true)}
+      onTouchMove={checkCasted}
       onTouchEnd={e => setDrawing(false)}
+      onMouseEnter={e => setDrawing(true)}
       onMouseLeave={e => setDrawing(false)}
+      onMouseDown={cast}
     >
       <canvas
         id="glyph"

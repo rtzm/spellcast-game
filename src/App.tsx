@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import GlyphContainer from './components/glyph-container';
-import Controls from './components/controls';
 import IncomingVideo from './components/incoming-video';
 import Processor from './components/processor';
 import './App.css';
@@ -47,6 +46,7 @@ function App() {
         <>
           <GlyphContainer
             deltaVector={currentVector}
+            onCast={(text) => console.log(text)}
           />
           <IncomingVideo
               onLoad={videoLoadCallback}
@@ -61,8 +61,8 @@ function App() {
           />
         </>
       )}
-      <div id="instructions">Press the <strong>Start</strong> button to start reading in camera data. Then either click your mouse or (if on touch device) touch within the box above to begin writing. Click again or lift your finger to stop writing and move the reticle. When you're done, click <strong>Stop</strong>, and your writing will attempt to be transcribed below.</div>
-      <div id="text-output"></div>
+      <h3>Rules</h3>
+      <div id="rules">Press the <strong>Start</strong> button to start reading in camera data. Then either click your mouse or (if on touch device) touch within the box above to begin writing. Click again or lift your finger to stop writing and move the reticle. When you're done, click <strong>Stop</strong>, and your writing will attempt to be transcribed below.</div>
     </div>
   );
 }
