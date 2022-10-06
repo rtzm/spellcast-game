@@ -6,7 +6,6 @@ type ProcessorProps = {
   video: HTMLVideoElement | null;
   height: number;
   width: number;
-  // TODO: assign correct type
   onProcessVector: (value: Vector) => void;
 };
 
@@ -15,7 +14,6 @@ const Processor = ({ video, height, width, onProcessVector }: ProcessorProps) =>
   const [context, setContext] = useState<CanvasRenderingContext2D | null>(null);
   const [rafId, setRafId] = useState<number>(-1);
   const [imageData, setImageData] = useState<ImageData | null>(null);
-  const [recording, setRecording] = useState<boolean>(false);
   const [converter, setConverter] = useState<Converter | null>(null);
 
   const offscreenCanvas = useRef<HTMLCanvasElement>(null);
@@ -49,12 +47,6 @@ const Processor = ({ video, height, width, onProcessVector }: ProcessorProps) =>
   useEffect(() => {
     if (context && video) {
       process(context, video);
-      // TODO: connect this to actual user interaction
-      setRecording(true);
-    } else {
-      // TODO: how to stop this correctly?
-      stop();
-      setRecording(false);
     }
     return () => { stop(); }
   }, [context, video]);

@@ -8,14 +8,13 @@ type GlyphContainerProps = {
 }
 
 const GlyphContainer = ({ deltaVector, onCast }: GlyphContainerProps) => {
-  const totalWidth = 480;
-  const totalHeight = 320;
-  const SENSIVITITY = 2;
+  const X_SENSITIVITY = 1;
+  const Y_SENSITIVITY = 1.15;
 
-  const [reticlePosition, setReticlePosition] = useState<Vector>({
-    x: Math.round(totalWidth/2),
-    y: Math.round(totalHeight/2)
-  })
+  const [reticlePosition, setReticlePosition] = useState<Vector>({ x: 0, y: 0 });
+  const [totalWidth, setTotalWidth] = useState<number>(0);
+  const [totalHeight, setTotalHeight] = useState<number>(0);
+  const container = useRef<HTMLDivElement>(null);
   const glyphCanvas = useRef<HTMLCanvasElement>(null);
   const reticleCanvas = useRef<HTMLCanvasElement>(null);
   const [drawing, setDrawing] = useState<boolean>(false);
@@ -23,14 +22,19 @@ const GlyphContainer = ({ deltaVector, onCast }: GlyphContainerProps) => {
 
   useEffect(() => {
     const worker = createWorker({
-      // TODO: figure out local trained data (not reading from here correctly)
-      // langPath: "./../assets/lang-data",
-      logger: m => console.log(m),
+      // TODO: should we add local trained data? Should we use best quality? (see https://github.com/naptha/tessdata)
+      // Maybe allow switching modes based on user input to calibrate
+      langPath: "https://tessdata.projectnaptha.com/4.0.0_fast",
+      // TODO: determine which is best strategy (refresh, readOnly, or none)
+      cacheMethod: 'none',
     });
     (async () => {
       await worker.load();
       await worker.loadLanguage('eng');
       await worker.initialize('eng');
+      await worker.setParameters({
+        tessedit_char_whitelist: "OXZ28VC6UWMS5/+",
+      });
     })();
     setTesseractWorker(worker);
     return () => { worker?.terminate() };
@@ -45,10 +49,10 @@ const GlyphContainer = ({ deltaVector, onCast }: GlyphContainerProps) => {
    * @param deltaVector 
    * @returns 
    */
-  const getEndVector = (startVector: Vector, deltaVector: Vector, sensitivity: number): Vector => {
+  const getEndVector = (startVector: Vector, deltaVector: Vector): Vector => {
     const newVector = {
-      x: startVector.x - deltaVector.x * sensitivity,
-      y: startVector.y - deltaVector.y * sensitivity
+      x: startVector.x - deltaVector.x * X_SENSITIVITY,
+      y: startVector.y - deltaVector.y * Y_SENSITIVITY
     };
 
     // Prevent position from moving past frame
@@ -68,6 +72,19 @@ const GlyphContainer = ({ deltaVector, onCast }: GlyphContainerProps) => {
     return newVector;
   };
 
+  // TODO: Make total width and height dynamic based on screen
+  useEffect(() => {
+    if (container && container.current) {
+        const actualDimensions = container.current.getBoundingClientRect();
+        setTotalWidth(actualDimensions.width);
+        setTotalHeight(actualDimensions.height);
+        setReticlePosition({
+          x: Math.round(actualDimensions.width/2),
+          y: Math.round(actualDimensions.height/2)
+        });
+    }
+  }, [container]);
+
   useEffect(() => {
     const glyphContext = glyphCanvas.current?.getContext('2d', { alpha: true });
     const reticleContext = reticleCanvas.current?.getContext('2d', { alpha: true });
@@ -76,7 +93,7 @@ const GlyphContainer = ({ deltaVector, onCast }: GlyphContainerProps) => {
       glyphContext.strokeStyle = "red";
       reticleContext.strokeStyle = "black";
 
-      const endVector = getEndVector(reticlePosition, deltaVector, SENSIVITITY);
+      const endVector = getEndVector(reticlePosition, deltaVector);
 
       if (drawing) {
         // Draw path
@@ -104,12 +121,12 @@ const GlyphContainer = ({ deltaVector, onCast }: GlyphContainerProps) => {
         reticleContext.lineTo(endVector.x, endVector.y + 5);
       }
       reticleContext.stroke();
-
       setReticlePosition(endVector);  
     }
   }, [deltaVector, drawing]);
 
   const checkCasted = (event: TouchEvent) => {
+    // TODO: make it so you have to slide your thumb up to cast the spell
     console.log(event);
   };
 
@@ -120,21 +137,40 @@ const GlyphContainer = ({ deltaVector, onCast }: GlyphContainerProps) => {
 
     const { data: { text } } = await tesseractWorker.recognize(glyphCanvas.current);
     onCast(text);
+
+    // Reset the reticle position and glyph output
+    const glyphContext = glyphCanvas.current?.getContext('2d', { alpha: true });
+    glyphContext?.clearRect(0, 0, totalWidth, totalHeight);
+    setReticlePosition({
+      x: Math.round(totalWidth/2),
+      y: Math.round(totalHeight/2)
+    });
   };
   return (
     <div
+      style={{
+        // Prevent selecting this container (using touch interactions
+        // and press hold for game controls)
+        WebkitTouchCallout: 'none', /* Safari */
+        WebkitUserSelect: 'none', /* Chrome */     
+        MozUserSelect: 'none', /* Firefox */
+        msUserSelect: 'none', /* Internet Explorer/Edge */
+        userSelect: 'none',
+        width: '100%'
+      }}
       id="glyph-container"
       onTouchStart={e => setDrawing(true)}
       onTouchMove={checkCasted}
-      onTouchEnd={e => setDrawing(false)}
+      onTouchEnd={e => { cast(e); setDrawing(false); } }
       onMouseEnter={e => setDrawing(true)}
       onMouseLeave={e => setDrawing(false)}
-      onMouseDown={cast}
+      onClick={cast}
+      ref={container}
     >
       <canvas
-        id="glyph"
         width={totalWidth}
         height={totalHeight}
+        id="glyph"
         ref={glyphCanvas}
       >
         Your browser does not support HTML5

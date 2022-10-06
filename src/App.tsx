@@ -4,6 +4,7 @@ import IncomingVideo from './components/incoming-video';
 import Processor from './components/processor';
 import './App.css';
 import { Vector } from './types';
+import Controls from './components/controls';
 
 function App() {
   const [errored, setErrored] = useState<boolean>(false);
@@ -11,27 +12,14 @@ function App() {
   const [height, setHeight] = useState<number>(0);
   const [width, setWidth] = useState<number>(0);
   const [currentVector, setCurrentVector] = useState<Vector>({x: 0, y: 0});
+  const [playing, setPlaying] = useState<boolean>(true);
+  const [lastCast, setLastCast] = useState<string>("");
 
   // Create canvases and objects for processing, and attach event listeners
   const videoLoadCallback = (video: HTMLVideoElement | null, downsampledHeight: number, downsampledWidth: number) => {
     setVideo(video);
     setHeight(downsampledHeight);
-    setWidth(downsampledWidth);
-
-    // // Bind processor to video playback and begin playback
-    // this.video.addEventListener('playing', processor.start.bind(processor), false);
-    // this.video.addEventListener('ended', processor.stop.bind(processor), false);
-    // this.video.addEventListener('pause', processor.stop.bind(processor), false);	
-    // this.videoControl.addEventListener('click', this.toggleControl.bind(this), false);
-  
-    // // Bind touch or mouse events in glyph canvas to drawing 
-    // this.reticle.addEventListener('touchstart', processor.toggleRecording.bind(processor), false);
-    // this.reticle.addEventListener('touchend', processor.toggleRecording.bind(processor), false);
-    // this.reticle.addEventListener('click', processor.toggleRecording.bind(processor), false);
-    
-    // // Bind transcription event when video pauses
-    // this.video.addEventListener('pause', this.transcribeGlyph.bind(this), false);	
-  
+    setWidth(downsampledWidth);  
   };
 
 
@@ -46,12 +34,27 @@ function App() {
         <>
           <GlyphContainer
             deltaVector={currentVector}
-            onCast={(text) => console.log(text)}
+            onCast={(text) => setLastCast(text)}
+          />
+          <h1
+            style={{textAlign: 'center'}}
+          >
+            {lastCast}
+          </h1>
+          <Controls
+            playing={playing}
+            onPlay={() => {
+              setPlaying(true);
+            }}
+            onPause={() => {
+              setPlaying(false);
+            }} 
           />
           <IncomingVideo
-              onLoad={videoLoadCallback}
-              onError={() => setErrored(true)}
-            />
+            playing={playing}
+            onLoad={videoLoadCallback}
+            onError={() => setErrored(true)}
+          />
 
           <Processor
             video={video}

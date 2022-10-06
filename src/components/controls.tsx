@@ -9,8 +9,8 @@ type ControlsProps = {
 const Controls = ({ playing, onPlay, onPause }: ControlsProps) => {
   return (
     <div id="controls">
-      <button id="video-control"
-        onClick={() => playing ? onPlay() : onPause()}
+      <button id="pause"
+        onClick={playing ? onPause : onPlay}
       >
         {playing ? "Pause" : "Play"}
       </button>

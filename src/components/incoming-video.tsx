@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import Controls from "./controls";
 
 type IncomingVideoProps = {
+  playing: boolean;
   onError: () => void;
   onLoad: (video: HTMLVideoElement | null, downsampledHeight: number, downsampledWidth: number) => void;
 }
@@ -10,7 +11,7 @@ type IncomingVideoProps = {
  * Set playsinline to true so that iOS doesn't make it go full screen on play.
  * Also mute it, just in case.
  */
-const IncomingVideo = ({ onError, onLoad }: IncomingVideoProps) => {
+const IncomingVideo = ({ playing, onError, onLoad }: IncomingVideoProps) => {
   const idealWidth: number = 120;
 	const idealHeight: number = 90;
 
@@ -43,7 +44,6 @@ const IncomingVideo = ({ onError, onLoad }: IncomingVideoProps) => {
       heightDownsample : 
       widthDownsample;
   };
-  const [capturing, setCapturing] = useState(false);
   // Currently capturing video
   const [stream, setStream] = useState<MediaStream | null>(null);
 
@@ -77,32 +77,28 @@ const IncomingVideo = ({ onError, onLoad }: IncomingVideoProps) => {
       thisVideo.current.play();
     }
   }, [thisVideo, stream]);
+
+  useEffect(() => {
+    if (playing && thisVideo.current) {
+      thisVideo.current.play();
+    } else if (!playing && thisVideo.current) {
+      thisVideo.current.pause();
+    }
+  }, [playing, thisVideo]);
+
   return (
-    <>
-      <video
-        disablePictureInPicture={true}
-        style={{ display: "none" }}
-        ref={thisVideo}
-        playsInline={true}
-        muted={true}
-        onLoadedMetadata={() => onLoad(
-          thisVideo.current, 
-          Math.floor((thisVideo.current?.videoWidth || 1) / downsampleRate), 
-          Math.floor((thisVideo.current?.videoHeight || 1) / downsampleRate)      
-        )}
-      />
-      <Controls
-        playing={capturing}
-        onPlay={() => {
-          thisVideo.current?.play();
-          setCapturing(!capturing);
-        }}
-        onPause={() => {
-          thisVideo.current?.pause();
-          setCapturing(!capturing);
-        }} 
-      />
-    </>
+    <video
+      disablePictureInPicture={true}
+      style={{ display: "none" }}
+      ref={thisVideo}
+      playsInline={true}
+      muted={true}
+      onLoadedMetadata={() => onLoad(
+        thisVideo.current, 
+        Math.floor((thisVideo.current?.videoWidth || 1) / downsampleRate), 
+        Math.floor((thisVideo.current?.videoHeight || 1) / downsampleRate)      
+      )}
+    />
   );
 }
 
