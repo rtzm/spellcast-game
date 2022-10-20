@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import GlyphContainer from './components/glyph-container';
 import IncomingVideo from './components/incoming-video';
 import Processor from './components/processor';
@@ -16,10 +16,10 @@ function App() {
   const [lastCast, setLastCast] = useState<string>("");
 
   // Create canvases and objects for processing, and attach event listeners
-  const videoLoadCallback = (video: HTMLVideoElement | null, width: number, height: number) => {
+  const videoLoadCallback = (video: HTMLVideoElement | null, downsampledHeight: number, downsampledWidth: number) => {
     setVideo(video);
-    setWidth(width);
-    setHeight(height);  
+    setHeight(downsampledHeight);
+    setWidth(downsampledWidth);  
   };
 
 

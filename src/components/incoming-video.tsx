@@ -12,9 +12,8 @@ type IncomingVideoProps = {
  * Also mute it, just in case.
  */
 const IncomingVideo = ({ playing, onError, onLoad }: IncomingVideoProps) => {
-  // TODO: skipped downsampling while figuring out perspective transforms
-  // const idealWidth: number = 640;
-	// const idealHeight: number = 480;
+  const idealWidth: number = 120;
+	const idealHeight: number = 90;
 
   /**
 	 * Media constraints for the call to getUserMedia
@@ -35,23 +34,21 @@ const IncomingVideo = ({ playing, onError, onLoad }: IncomingVideoProps) => {
   /**
    * This would be preferable to set using WebRTC constraints, but those are 
    * inconsistently applied across browsers, especially Safari iOS.
-   * TODO: Skipped while figuring out perspective transforms
+   *
    * @return The rate at which video should be downsampled to achieve ideal
    */
-  // const calculateDownsample = function(video: HTMLVideoElement): number {
-  //   console.log(video.width, video.height);
-  //   let widthDownsample = video.videoWidth / idealWidth;
-  //   let heightDownsample = video.videoHeight / idealHeight;
-  //   return (widthDownsample > heightDownsample) ? 
-  //     heightDownsample : 
-  //     widthDownsample;
-  // };
+  const calculateDownsample = function(video: HTMLVideoElement): number {
+    let widthDownsample = video.videoWidth / idealWidth;
+    let heightDownsample = video.videoHeight / idealHeight;
+    return (widthDownsample > heightDownsample) ? 
+      heightDownsample : 
+      widthDownsample;
+  };
   // Currently capturing video
   const [stream, setStream] = useState<MediaStream | null>(null);
 
   // How much the video size should be reduced by
-  // TODO: skipped because while figuring out perspective transforms
-  // const [downsampleRate, setDownsampleRate] = useState<number>(4);
+  const [downsampleRate, setDownsampleRate] = useState<number>(4);
   
   const thisVideo = useRef<HTMLVideoElement>(null);
 
@@ -72,11 +69,10 @@ const IncomingVideo = ({ playing, onError, onLoad }: IncomingVideoProps) => {
     if (thisVideo?.current && stream) {
     	stream.getAudioTracks().forEach(track => track.enabled = false);
       thisVideo.current.srcObject = stream;
-
-      // const newDownsampleRate = calculateDownsample(thisVideo.current);
-      // if (newDownsampleRate > downsampleRate) {
-      //   setDownsampleRate(newDownsampleRate);
-      // }
+      const newDownsampleRate = calculateDownsample(thisVideo.current);
+      if (newDownsampleRate > downsampleRate) {
+        setDownsampleRate(newDownsampleRate);
+      }
       // TODO: https://developer.chrome.com/blog/play-request-was-interrupted/#fix
       thisVideo.current.play();
     }
@@ -99,8 +95,8 @@ const IncomingVideo = ({ playing, onError, onLoad }: IncomingVideoProps) => {
       muted={true}
       onLoadedMetadata={() => onLoad(
         thisVideo.current, 
-        thisVideo.current?.videoWidth || 0, 
-        thisVideo.current?.videoHeight || 0
+        Math.floor((thisVideo.current?.videoWidth || 1) / downsampleRate), 
+        Math.floor((thisVideo.current?.videoHeight || 1) / downsampleRate)      
       )}
     />
   );
