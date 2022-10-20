@@ -1,15 +1,15 @@
 {
   "files": {
     "main.css": "/spellcast-game/static/css/main.5185830b.css",
-    "main.js": "/spellcast-game/static/js/main.93528823.js",
+    "main.js": "/spellcast-game/static/js/main.04209ec4.js",
     "static/js/787.19296fd4.chunk.js": "/spellcast-game/static/js/787.19296fd4.chunk.js",
     "index.html": "/spellcast-game/index.html",
     "main.5185830b.css.map": "/spellcast-game/static/css/main.5185830b.css.map",
-    "main.93528823.js.map": "/spellcast-game/static/js/main.93528823.js.map",
+    "main.04209ec4.js.map": "/spellcast-game/static/js/main.04209ec4.js.map",
     "787.19296fd4.chunk.js.map": "/spellcast-game/static/js/787.19296fd4.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.5185830b.css",
-    "static/js/main.93528823.js"
+    "static/js/main.04209ec4.js"
   ]
 }
